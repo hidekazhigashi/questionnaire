@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アンケート作成 - アンケートフォーム作成ツール</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <h2 style="margin: 0; color: #007bff;">アンケートツール</h2>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">管理</a>
+                <a href="create.html" class="nav-link active">新規作成</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="header">
+            <h1>アンケート作成</h1>
+            <p>ドラッグ&ドロップで簡単にアンケートを作成できます</p>
+        </header>
+
+        <div class="main-content">
+            <!-- サイドバー：質問タイプ選択 -->
+            <div class="sidebar">
+                <h3>質問タイプ</h3>
+                <div class="question-types">
+                    <div class="question-type" draggable="true" data-type="text">
+                        <span>📝</span>
+                        <span>一行テキスト</span>
+                    </div>
+                    <div class="question-type" draggable="true" data-type="email">
+                        <span>📧</span>
+                        <span>メールアドレス</span>
+                    </div>
+                    <div class="question-type" draggable="true" data-type="textarea">
+                        <span>📄</span>
+                        <span>複数行テキスト</span>
+                    </div>
+                    <div class="question-type" draggable="true" data-type="radio">
+                        <span>🔘</span>
+                        <span>ラジオボタン</span>
+                    </div>
+                    <div class="question-type" draggable="true" data-type="checkbox">
+                        <span>☑️</span>
+                        <span>チェックボックス</span>
+                    </div>
+                    <div class="question-type" draggable="true" data-type="select">
+                        <span>📋</span>
+                        <span>ドロップダウン</span>
+                    </div>
+                    <div class="question-type" draggable="true" data-type="label">
+                        <span>🏷️</span>
+                        <span>ラベル</span>
+                    </div>
+                    <div class="question-type" draggable="true" data-type="parameter">
+                        <span>🔗</span>
+                        <span>パラメータ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- メインエリア：フォーム構築 -->
+            <div class="form-builder">
+                <div class="form-header">
+                    <input type="text" id="survey-title" placeholder="アンケートタイトルを入力" class="survey-title-input">
+                    <div class="form-actions">
+                        <button id="preview-btn" class="btn btn-secondary">プレビュー</button>
+                        <button id="save-btn" class="btn btn-primary">保存</button>
+                        <button id="publish-btn" class="btn btn-success">公開</button>
+                    </div>
+                </div>
+
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-placeholder">
+                        <span>📝</span>
+                        <p>左から質問タイプをドラッグ&ドロップしてください</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- プレビューモーダル -->
+        <div id="preview-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>アンケートプレビュー</h2>
+                    <span class="close" id="close-preview">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="preview-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-preview-btn" class="btn btn-secondary">閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 質問編集モーダル -->
+        <div id="edit-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>質問編集</h2>
+                    <span class="close" id="close-edit">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="question-text">質問文</label>
+                        <input type="text" id="question-text" class="form-control">
+                    </div>
+                    <div class="form-group" id="options-group" style="display:none;">
+                        <label>選択肢</label>
+                        <div id="options-container"></div>
+                        <button id="add-option" class="btn btn-sm btn-outline">選択肢を追加</button>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="required-checkbox">
+                            必須回答
+                        </label>
+                    </div>
+                    
+                    <!-- パラメータ名設定 -->
+                    <div class="form-group" id="parameter-group" style="display:none;">
+                        <label for="parameter-name">URLパラメータ名</label>
+                        <input type="text" id="parameter-name" class="form-control" placeholder="例: source, campaign, user_id">
+                        <p class="help-text">URLの?parameter_name=valueからvalueを自動取得します</p>
+                    </div>
+                    
+                    <!-- 条件分岐設定 -->
+                    <div class="form-group">
+                        <label>表示条件</label>
+                        <p class="help-text">他の質問の回答に応じて、この質問の表示・非表示を制御できます</p>
+                        <div id="conditions-container"></div>
+                        <button id="add-condition" class="btn btn-sm btn-outline">条件を追加</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="save-question" class="btn btn-primary">保存</button>
+                    <button id="cancel-edit" class="btn btn-secondary">キャンセル</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

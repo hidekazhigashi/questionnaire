@@ -1,0 +1,87 @@
+[
+    {
+        "id": "17552169961816",
+        "title": "あい",
+        "questions": [
+            {
+                "id": 1755239525755,
+                "type": "label",
+                "title": "ラベル・説明文",
+                "required": false,
+                "options": [],
+                "conditions": []
+            },
+            {
+                "id": 1755219556355,
+                "type": "checkbox",
+                "title": "チェックボックスの質問",
+                "required": false,
+                "options": [
+                    "1",
+                    "2"
+                ],
+                "conditions": []
+            },
+            {
+                "id": 1755216994106,
+                "type": "text",
+                "title": "一行テキストの質問",
+                "required": true,
+                "options": [],
+                "conditions": [
+                    {
+                        "targetQuestionId": 1755219556355,
+                        "operator": "equals",
+                        "value": "1"
+                    }
+                ]
+            },
+            {
+                "id": 1755239990419,
+                "type": "email",
+                "title": "メールアドレスの質問",
+                "required": true,
+                "options": [],
+                "conditions": []
+            },
+            {
+                "id": 1755239314574,
+                "type": "textarea",
+                "title": "複数行テキストの質問",
+                "required": false,
+                "options": [],
+                "conditions": []
+            },
+            {
+                "id": 1755241822315,
+                "type": "parameter",
+                "title": "パラメータ質問",
+                "required": false,
+                "options": [],
+                "conditions": [],
+                "parameterName": "source"
+            }
+        ],
+        "published": true,
+        "publicUrl": "http:\/\/localhost:8000\/survey.html?id=17552169961816",
+        "createdAt": "2025-08-15T00:16:36+00:00",
+        "updatedAt": "2025-08-15T07:21:43+00:00"
+    },
+    {
+        "id": "17552170148909",
+        "title": "あああ",
+        "questions": [
+            {
+                "id": 1755217013624,
+                "type": "text",
+                "title": "一行テキストの質問",
+                "required": false,
+                "options": []
+            }
+        ],
+        "published": true,
+        "publicUrl": "http:\/\/localhost:8000\/survey.html?id=17552170148909",
+        "createdAt": "2025-08-15T00:16:54+00:00",
+        "updatedAt": "2025-08-15T00:57:56+00:00"
+    }
+]

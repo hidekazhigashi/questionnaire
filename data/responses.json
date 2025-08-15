@@ -1,0 +1,55 @@
+[
+    {
+        "id": "test_response_001",
+        "surveyId": "17552170148909",
+        "answers": {
+            "question_0": "テスト回答です"
+        },
+        "submittedAt": "2025-08-15T01:00:00+00:00",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": "17552420033390",
+        "surveyId": "17552169961816",
+        "surveyTitle": "あい",
+        "answers": {
+            "question_1": [
+                "2"
+            ],
+            "question_3": "hidekazu.higashi@me.com",
+            "question_4": "a\na\na"
+        },
+        "submittedAt": "2025-08-15T07:13:23+00:00",
+        "ipAddress": "::1"
+    },
+    {
+        "id": "17552421107386",
+        "surveyId": "17552169961816",
+        "surveyTitle": "あい",
+        "answers": {
+            "question_1": [
+                "1"
+            ],
+            "question_2": "パラメータテスト回答",
+            "question_3": "test@parameter.com",
+            "question_4": ""
+        },
+        "submittedAt": "2025-08-15T07:15:10+00:00",
+        "ipAddress": "::1"
+    },
+    {
+        "id": "17552421745164",
+        "surveyId": "17552169961816",
+        "surveyTitle": "あい",
+        "answers": {
+            "question_1": [
+                "2"
+            ],
+            "question_3": "debug@test.com",
+            "question_4": "",
+            "question_5": "debug_test"
+        },
+        "submittedAt": "2025-08-15T07:16:14+00:00",
+        "ipAddress": "::1"
+    }
+]

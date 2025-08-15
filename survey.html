@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アンケート回答</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        .survey-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .survey-header {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .survey-form {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .question-block {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .question-block:last-child {
+            border-bottom: none;
+        }
+        
+        .question-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .required-mark {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .form-check {
+            margin-bottom: 10px;
+        }
+        
+        .form-check input {
+            margin-right: 8px;
+        }
+        
+        .form-check label {
+            cursor: pointer;
+            font-size: 1rem;
+            color: #555;
+        }
+        
+        .submit-section {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+            margin-top: 30px;
+        }
+        
+        .submit-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .success-message {
+            text-align: center;
+            background: #d4edda;
+            color: #155724;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .survey-not-found {
+            text-align: center;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 40px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="survey-container">
+        <div id="survey-content">
+            <!-- アンケート内容がここに表示されます -->
+        </div>
+        
+        <div class="success-message" id="success-message">
+            <h2>回答を送信しました</h2>
+            <p>ご協力ありがとうございました。</p>
+        </div>
+        
+        <div class="back-link">
+            <a href="index.html">管理画面に戻る</a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const surveyId = urlParams.get('id');
+            
+            if (!surveyId) {
+                showSurveyNotFound('アンケートIDが指定されていません。');
+                return;
+            }
+            
+            // APIからアンケートを取得
+            loadSurveyFromAPI(parseInt(surveyId));
+
+            async function loadSurveyFromAPI(surveyId) {
+                try {
+                    const survey = await surveyAPI.getSurvey(surveyId);
+                    
+                    if (!survey.published) {
+                        showSurveyNotFound('このアンケートは現在公開されていません。');
+                        return;
+                    }
+                    
+                    renderSurvey(survey);
+                } catch (error) {
+                    showSurveyNotFound('指定されたアンケートが見つかりません。');
+                }
+            }
+            
+            function showSurveyNotFound(message) {
+                $('#survey-content').html(`
+                    <div class="survey-not-found">
+                        <h2>アンケートが見つかりません</h2>
+                        <p>${message}</p>
+                    </div>
+                `);
+            }
+            
+            function renderSurvey(survey) {
+                let html = `
+                    <div class="survey-header">
+                        <h1>${survey.title}</h1>
+                        <p>以下の質問にお答えください</p>
+                    </div>
+                    
+                    <form class="survey-form" id="survey-form">
+                `;
+                
+                let questionNumber = 1;
+                survey.questions.forEach((question, index) => {
+                    const conditionsAttr = question.conditions && question.conditions.length > 0 
+                        ? `data-conditions='${JSON.stringify(question.conditions)}'` 
+                        : '';
+                    
+                    if (question.type === 'label') {
+                        html += `
+                            <div class="question-block label-block" data-question-id="${question.id}" ${conditionsAttr}>
+                                <div class="label-content">
+                                    ${question.title}
+                                </div>
+                            </div>
+                        `;
+                    } else if (question.type === 'parameter') {
+                        // パラメータ質問は非表示の隠しフィールドとして追加
+                        html += `
+                            <div class="question-block parameter-block" data-question-id="${question.id}" ${conditionsAttr} style="display: none;">
+                                <input type="hidden" name="question_${index}" id="question_${index}" value="">
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="question-block" data-question-id="${question.id}" ${conditionsAttr}>
+                                <div class="question-title">
+                                    ${questionNumber}. ${question.title}
+                                    ${question.required ? '<span class="required-mark">*</span>' : ''}
+                                </div>
+                                <div class="question-input">
+                                    ${renderQuestionInput(question, index)}
+                                </div>
+                                <div class="error-message" id="error-${index}">この項目は必須です</div>
+                            </div>
+                        `;
+                        questionNumber++;
+                    }
+                });
+                
+                html += `
+                        <div class="submit-section">
+                            <button type="submit" class="submit-btn">回答を送信</button>
+                        </div>
+                    </form>
+                `;
+                
+                $('#survey-content').html(html);
+                
+                // フォーム送信イベント
+                $('#survey-form').on('submit', function(e) {
+                    e.preventDefault();
+                    submitSurvey(survey);
+                });
+                
+                // URLパラメータからパラメータ質問の値を設定
+                setParameterValues(survey);
+                
+                // 条件分岐の初期評価
+                evaluateAllConditions();
+                
+                // 回答変更時の条件再評価
+                $('#survey-form').on('change', 'input, select, textarea', function() {
+                    evaluateAllConditions();
+                });
+            }
+            
+            function renderQuestionInput(question, index) {
+                let html = '';
+                const name = `question_${index}`;
+                
+                switch(question.type) {
+                    case 'text':
+                        html = `<input type="text" name="${name}" class="form-control" ${question.required ? 'required' : ''}>`;
+                        break;
+                        
+                    case 'email':
+                        html = `<input type="email" name="${name}" class="form-control" placeholder="example@domain.com" ${question.required ? 'required' : ''}>`;
+                        break;
+                        
+                    case 'textarea':
+                        html = `<textarea name="${name}" class="form-control" rows="4" ${question.required ? 'required' : ''}></textarea>`;
+                        break;
+                        
+                    case 'radio':
+                        question.options.forEach((option, optionIndex) => {
+                            html += `
+                                <div class="form-check">
+                                    <input type="radio" name="${name}" value="${option}" id="${name}_${optionIndex}" ${question.required ? 'required' : ''}>
+                                    <label for="${name}_${optionIndex}">${option}</label>
+                                </div>
+                            `;
+                        });
+                        break;
+                        
+                    case 'checkbox':
+                        question.options.forEach((option, optionIndex) => {
+                            html += `
+                                <div class="form-check">
+                                    <input type="checkbox" name="${name}" value="${option}" id="${name}_${optionIndex}">
+                                    <label for="${name}_${optionIndex}">${option}</label>
+                                </div>
+                            `;
+                        });
+                        break;
+                        
+                    case 'select':
+                        html = `<select name="${name}" class="form-control" ${question.required ? 'required' : ''}>`;
+                        html += '<option value="">選択してください</option>';
+                        question.options.forEach(option => {
+                            html += `<option value="${option}">${option}</option>`;
+                        });
+                        html += '</select>';
+                        break;
+                        
+                    case 'label':
+                        html = `<div class="label-display">${question.title}</div>`;
+                        break;
+                }
+                
+                return html;
+            }
+            
+            function setParameterValues(survey) {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                survey.questions.forEach((question, index) => {
+                    if (question.type === 'parameter' && question.parameterName) {
+                        const paramValue = urlParams.get(question.parameterName);
+                        if (paramValue) {
+                            const hiddenField = document.getElementById(`question_${index}`);
+                            if (hiddenField) {
+                                hiddenField.value = paramValue;
+                                console.log(`パラメータ質問「${question.title}」にURLパラメータ「${question.parameterName}=${paramValue}」を設定`);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function evaluateAllConditions() {
+                $('.question-block[data-conditions]').each(function() {
+                    const questionBlock = $(this);
+                    const conditions = JSON.parse(questionBlock.attr('data-conditions'));
+                    const shouldShow = evaluateConditions(conditions);
+                    
+                    if (shouldShow) {
+                        questionBlock.removeClass('question-hidden').show();
+                        // 表示時にrequired属性を復元
+                        questionBlock.find('input, select, textarea').each(function() {
+                            if ($(this).data('original-required')) {
+                                $(this).attr('required', true);
+                            }
+                        });
+                    } else {
+                        questionBlock.addClass('question-hidden').hide();
+                        // 非表示にする際はrequired属性を一時的に削除
+                        questionBlock.find('input[required], select[required], textarea[required]').each(function() {
+                            $(this).data('original-required', true);
+                            $(this).removeAttr('required');
+                        });
+                        // 非表示にする際は回答をクリア
+                        clearQuestionAnswer(questionBlock);
+                    }
+                });
+            }
+            
+            function evaluateConditions(conditions) {
+                if (!conditions || conditions.length === 0) {
+                    return true;
+                }
+                
+                // すべての条件がANDで結合
+                return conditions.every(condition => {
+                    const targetQuestionBlock = $(`.question-block[data-question-id="${condition.targetQuestionId}"]`);
+                    const targetAnswer = getQuestionAnswer(targetQuestionBlock);
+                    
+                    switch (condition.operator) {
+                        case 'equals':
+                            if (Array.isArray(targetAnswer)) {
+                                return targetAnswer.includes(condition.value);
+                            }
+                            return targetAnswer === condition.value;
+                            
+                        case 'contains':
+                            if (Array.isArray(targetAnswer)) {
+                                return targetAnswer.some(value => value.includes(condition.value));
+                            }
+                            return targetAnswer && targetAnswer.includes(condition.value);
+                            
+                        case 'not_equals':
+                            if (Array.isArray(targetAnswer)) {
+                                return !targetAnswer.includes(condition.value);
+                            }
+                            return targetAnswer !== condition.value;
+                            
+                        default:
+                            return false;
+                    }
+                });
+            }
+            
+            function getQuestionAnswer(questionBlock) {
+                const inputs = questionBlock.find('input, select, textarea');
+                
+                if (inputs.first().attr('type') === 'checkbox') {
+                    const checkedBoxes = questionBlock.find('input:checked');
+                    return Array.from(checkedBoxes).map(cb => cb.value);
+                } else if (inputs.first().attr('type') === 'radio') {
+                    const checkedRadio = questionBlock.find('input:checked');
+                    return checkedRadio.length > 0 ? checkedRadio.val() : '';
+                } else {
+                    return inputs.val() || '';
+                }
+            }
+            
+            function clearQuestionAnswer(questionBlock) {
+                const inputs = questionBlock.find('input, select, textarea');
+                
+                inputs.each(function() {
+                    const input = $(this);
+                    if (input.attr('type') === 'checkbox' || input.attr('type') === 'radio') {
+                        input.prop('checked', false);
+                    } else {
+                        input.val('');
+                    }
+                });
+            }
+            
+            function submitSurvey(survey) {
+                const formData = new FormData(document.getElementById('survey-form'));
+                const answers = {};
+                let hasErrors = false;
+                
+                // デバッグ: FormDataの内容をログ出力
+                console.log('=== FormData Contents ===');
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+                console.log('========================');
+                
+                // バリデーション（表示されている質問のみ）
+                survey.questions.forEach((question, index) => {
+                    const name = `question_${index}`;
+                    const questionBlock = $(`.question-block[data-question-id="${question.id}"]`);
+                    const errorElement = $(`#error-${index}`);
+                    errorElement.hide().text('この項目は必須です');
+                    
+                    // 非表示の質問やラベルタイプはスキップ（必須設定も無視）
+                    if (questionBlock.hasClass('question-hidden') || question.type === 'label') {
+                        // デバッグ: 条件により非表示になった必須質問をログ出力
+                        if (question.required && questionBlock.hasClass('question-hidden')) {
+                            console.log(`必須質問「${question.title}」は条件により非表示のためバリデーション対象外`);
+                        }
+                        return;
+                    }
+                    
+                    // パラメータタイプはバリデーションのみスキップ（回答データには含める）
+                    if (question.type === 'parameter') {
+                        const value = formData.get(name);
+                        answers[name] = value;
+                        console.log(`パラメータ質問 ${name}: "${value}" を回答データに追加`);
+                        return; // バリデーションはスキップ
+                    }
+                    
+                    if (question.type === 'checkbox') {
+                        const checkboxes = $(`input[name="${name}"]:checked`);
+                        answers[name] = Array.from(checkboxes).map(cb => cb.value);
+                        
+                        if (question.required && answers[name].length === 0) {
+                            errorElement.show();
+                            hasErrors = true;
+                        }
+                    } else {
+                        const value = formData.get(name);
+                        answers[name] = value;
+                        
+                        if (question.required && (!value || value.trim() === '')) {
+                            errorElement.show();
+                            hasErrors = true;
+                        } else if (question.type === 'email' && value && value.trim() !== '') {
+                            // メール形式バリデーション
+                            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailPattern.test(value.trim())) {
+                                errorElement.text('正しいメールアドレスを入力してください').show();
+                                hasErrors = true;
+                            }
+                        }
+                    }
+                });
+                
+                if (hasErrors) {
+                    toastr.error('表示されている必須項目を入力してください');
+                    return;
+                }
+                
+                // 回答を保存
+                const response = {
+                    surveyId: survey.id,
+                    answers: answers
+                };
+                
+                // API経由で回答を保存
+                submitResponseToAPI(response);
+            }
+
+            async function submitResponseToAPI(response) {
+                try {
+                    await surveyAPI.createResponse(response);
+                    
+                    // 成功メッセージを表示
+                    $('#survey-content').hide();
+                    $('#success-message').show();
+                    
+                    // ページトップにスクロール
+                    $('html, body').animate({ scrollTop: 0 }, 500);
+                    
+                    toastr.success('回答を送信しました');
+                } catch (error) {
+                    toastr.error('回答の送信に失敗しました: ' + error.message);
+                }
+            }
+            
+            // toastr設定
+            toastr.options = {
+                "closeButton": true,
+                "debug": false,
+                "newestOnTop": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "3000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+        });
+    </script>
+</body>
+</html>
