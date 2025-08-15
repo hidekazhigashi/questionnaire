@@ -102,7 +102,7 @@ $(document).ready(function() {
             const card = `
                 <div class="survey-card" data-id="${survey.id}">
                     <div class="survey-card-header">
-                        <div class="survey-card-title">${survey.title}</div>
+                        <div class="survey-card-title"></div>
                         <div class="survey-card-meta">
                             <span>作成: ${new Date(survey.createdAt).toLocaleDateString('ja-JP')}</span>
                             ${statusBadge}
@@ -149,7 +149,10 @@ $(document).ready(function() {
                     </div>
                 </div>
             `;
-            container.append(card);
+            const cardElement = $(card);
+            // XSS対策: タイトルを安全にテキストとして設定
+            cardElement.find('.survey-card-title').text(survey.title);
+            container.append(cardElement);
         });
     }
 

@@ -155,7 +155,7 @@ $(document).ready(function() {
             const questionCard = $(`
                 <div class="question-card">
                     <div class="question-header">
-                        <div class="question-title">${question.title}</div>
+                        <div class="question-title"></div>
                         <div class="question-type">${getQuestionTypeName(question.type)} | ${questionAnswers.length}件の回答</div>
                     </div>
                     <div class="question-answers" id="answers-${questionIndex}">
@@ -163,6 +163,9 @@ $(document).ready(function() {
                 </div>
             `);
 
+            // XSS対策: 質問タイトルを安全にテキストとして設定
+            questionCard.find('.question-title').text(question.title);
+            
             const answersContainer = questionCard.find(`#answers-${questionIndex}`);
 
             if (question.type === 'radio' || question.type === 'checkbox' || question.type === 'select') {
@@ -221,13 +224,15 @@ $(document).ready(function() {
             const percentage = totalAnswers > 0 ? Math.round((count / totalAnswers) * 100) : 0;
             const barHtml = $(`
                 <div class="choice-bar">
-                    <div class="choice-label">${choice}</div>
+                    <div class="choice-label"></div>
                     <div class="choice-progress">
                         <div class="choice-fill" style="width: ${percentage}%"></div>
                     </div>
                     <div class="choice-count">${count}件 (${percentage}%)</div>
                 </div>
             `);
+            // XSS対策: 選択肢ラベルを安全にテキストとして設定
+            barHtml.find('.choice-label').text(choice);
             statsHtml.append(barHtml);
         });
 
@@ -359,11 +364,14 @@ $(document).ready(function() {
 
             const questionDiv = $(`
                 <div class="response-question">
-                    <div class="response-question-title">${index + 1}. ${question.title}</div>
+                    <div class="response-question-title"></div>
                     <div class="response-answer"></div>
                 </div>
             `);
 
+            // XSS対策: 質問タイトルを安全にテキストとして設定
+            questionDiv.find('.response-question-title').text(`${index + 1}. ${question.title}`);
+            
             const answerDiv = questionDiv.find('.response-answer');
             
             if (answer === undefined || answer === '' || (Array.isArray(answer) && answer.length === 0)) {
